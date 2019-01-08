@@ -92,11 +92,11 @@ def deeplabcut(video):
         deeplabcut.create_labeled_video(path_config, [video])
 
 
-        h5_file = os.path.abspath(glob.glob('*.h5')[0])
-        labeled_video = os.path.abspath(glob.glob('*_labeled.mp4')[0])
+        h5_file = os.path.abspath(glob.glob('plus_maze_*.h5')[0])
+        labeled_video = os.path.abspath(glob.glob('plus_maze_*_labeled.mp4')[0])
 
-        pickle = os.path.abspath(glob.glob('*.pickle')[0])
-        csv_file = os.path.abspath(glob.glob('*.csv')[0])
+        pickle = os.path.abspath(glob.glob('plus_maze_*.pickle')[0])
+        csv_file = os.path.abspath(glob.glob('plus_maze_*.csv')[0])
 
         #I failed to force deeplabcut to put the output in the workflow directory, so I am copying them
         #like a caveman
@@ -172,8 +172,8 @@ def draw_trajectory(h5_file, video):
 		plt.axis('off')
 		plt.gca().invert_yaxis() #otherwise the images appear mirror imaged
 		plt.savefig('%s_Trajectory.png' % (filename_without_ext))
-        trajectory = os.path.abspath(glob.glob('*_Trajectory.png')[0])
-        return trajectory
+		trajectory = os.path.abspath(glob.glob('*_Trajectory.png')[0])
+		return trajectory
 
 
 draw_trajectory = Node(name = 'Draw_Trajectory',
@@ -183,7 +183,7 @@ draw_trajectory = Node(name = 'Draw_Trajectory',
 
 #-----------------------------------------------------------------------------------------------------
 # In[8]:
-#Draw Trajectory
+#Draw density map
 
 def draw_density_map(h5_file, video):
 		import os
@@ -246,7 +246,7 @@ draw_density_map = Node(name = 'Draw_Density_Map',
 
 #-----------------------------------------------------------------------------------------------------
 # In[9]:
-#draw the compartments and extract the metrics
+#draw the compartments and extract the metrices
 def get_metrics(h5_file, video):
 		import os
 		import h5py #top open h5 binary files
@@ -293,144 +293,144 @@ def get_metrics(h5_file, video):
 	    #aka each two corresponding rows are two consecutive frames
 	    #I tried to do it with euclidean distance in scipy, but it is more computationally expensive
 	    #and gives exactly the same result
-	    Z1 = Z[0:-1]  
-	    Z2 = Z[1:, :]
+		Z1 = Z[0:-1]  
+		Z2 = Z[1:, :]
 	    
 	    #the euclidean distance formula:  dist((x, y), (a, b)) = √(x - a)² + (y - b)²
-	    diff = (Z1 - Z2)
-	    
-	    squared = diff**2
-	    sumed = np.sum(squared, axis=1)
-	    distances = np.sqrt(sumed) 
-	    #from the calibration of the video, we know that 216pixels = 50cm aka 1cm=4.32pixel
-	    total_distance = np.sum(distances) #pixels
-	    total_distance = total_distance / 4.32 #cm
-		
+		diff = (Z1 - Z2)
+
+		squared = diff**2
+		sumed = np.sum(squared, axis=1)
+		distances = np.sqrt(sumed) 
+		#from the calibration of the video, we know that 216pixels = 50cm aka 1cm=4.32pixel
+		total_distance = np.sum(distances) #pixels
+		total_distance = total_distance / 4.32 #cm
+
 
 
 		################################################################################################################
 		#Velocity
-	    no_of_frames = Z.shape[0]
-	    no_of_sec = no_of_frames / fps
-	    velocity = total_distance / no_of_sec #velocity cm/sec
-	    
-
-	    #################################################################################################################
-	    #get the mean
-	    mean = np.mean([Z.max(axis=0), Z.min(axis=0)], axis=0) + 10 #10 is half arm width, fixed for my + maze arenas
-	    
-	    #draw a square with mean as the center point to delineate the center of the maze
-	    shape1 = matplotlib.patches.RegularPolygon((mean[0],mean[1]),numVertices=4, radius=40, color='r', alpha=0.5)
-	    
-	    #get the 4 points that constitute the heads of the center square
-	    square = shape1.get_verts() #they are 5 here to close the square
-	    
-	    #get the points inside of the center square
-	    inside = shape1.contains_points(Z) #must contain Z, requires 2dim
-	    outside = ~ inside #inrquality operator
-	    
-	    #determine the size and resolution of your figure
-	    plt.figure(figsize=(8,6), dpi=300)
-	 
-	    #draw the trajectory
-	    plt.plot(x,y, 'k-', linewidth=1, alpha=0.5)
-	    plt.plot(x,y, 'b.',markersize=10, alpha=0.2) #I always do this as a quality control. If there is any blue points obvious
-	                        #this means there is some kind of error that needs to be debugged
-	    
-	    #draw the frames inside and outside the center box
-	    plt.plot(x[inside],y[inside],'w.')
-
-	    plt.plot(x[outside],y[outside],'k.')
-
-	    #plot the frames in each of the four arms
-	    plt.plot(x[outside][x < mean[0]][y > mean[1]],
-	         y[outside][x < mean[0]][y > mean[1]],'r.')
+		no_of_frames = Z.shape[0]
+		no_of_sec = no_of_frames / fps
+		velocity = total_distance / no_of_sec #velocity cm/sec
 
 
-	    plt.plot(x[outside][x < mean[0] ][y < mean[1]],
-	         y[outside][x < mean[0]][y < mean[1]],'m.')
-	    
-	    
-	    plt.plot(x[outside][x > mean[0]][y < mean[1]],
-	         y[outside][x > mean[0]][y < mean[1]],'y.')
+		#################################################################################################################
+		#get the mean
+		mean = np.mean([Z.max(axis=0), Z.min(axis=0)], axis=0) + 10 #10 is half arm width, fixed for my + maze arenas
+
+		#draw a square with mean as the center point to delineate the center of the maze
+		shape1 = matplotlib.patches.RegularPolygon((mean[0],mean[1]),numVertices=4, radius=40, color='r', alpha=0.5)
+
+		#get the 4 points that constitute the heads of the center square
+		square = shape1.get_verts() #they are 5 here to close the square
+
+		#get the points inside of the center square
+		inside = shape1.contains_points(Z) #must contain Z, requires 2dim
+		outside = ~ inside #inrquality operator
+
+		#determine the size and resolution of your figure
+		plt.figure(figsize=(8,6), dpi=300)
+
+		#draw the trajectory
+		plt.plot(x,y, 'k-', linewidth=1, alpha=0.5)
+		plt.plot(x,y, 'b.',markersize=10, alpha=0.2) #I always do this as a quality control. If there is any blue points obvious
+		                    #this means there is some kind of error that needs to be debugged
+
+		#draw the frames inside and outside the center box
+		plt.plot(x[inside],y[inside],'w.')
+
+		plt.plot(x[outside],y[outside],'k.')
+
+		#plot the frames in each of the four arms
+		plt.plot(x[outside][x < mean[0]][y > mean[1]],
+		     y[outside][x < mean[0]][y > mean[1]],'r.')
 
 
-	    plt.plot(x[outside][x > mean[0]][y > mean[1]],
-	         y[outside][x > mean[0]][y > mean[1]],'g.', )
-
-	    
-	    #plot the square, last step to make it over the dots in order to be obvious
-	    plt.plot(shape1.get_verts()[:,0],shape1.get_verts()[:,1], 'k--')
-	    plt.plot(shape1.get_verts()[:,0],shape1.get_verts()[:,1], 'ko')
-	    
-	    #draw the mean last for the exact same reason
-	    plt.plot(mean[0],mean[1], 'ko')
-	    
-	    #now plot your frame you extracted earlier, this will invert y axis aka put in the correct order
-	    plt.imshow(image) #you do not need to invert y axis here, plotting an image forces it
-	    
-	    plt.axis('off')
-	    plt.savefig('%s_Divisions.png' % (filename_without_ext))
-	    divisions = os.path.abspath(glob.glob('*_Divisions.png')[0])
-        
-	    ######################################################################################################
-	    
-	    #use the number of frames to get the time spent in each arm
-	    sec_in_center = len(x[inside]) / fps
-	    
-	    sec_in_arm1 = len(x[outside][x < mean[0]][y > mean[1]]) / fps #red arm
-	    sec_in_arm2 = len(x[outside][x < mean[0]][y < mean[1]]) / fps #magenta  
-	    sec_in_arm3 = len(x[outside][x > mean[0]][y < mean[1]]) / fps #yellow
-	    sec_in_arm4 = len(x[outside][x > mean[0]][y > mean[1]]) / fps #green
-
-	    time_in_center = sec_in_center
-	    time_in_center_percentage = (time_in_center * fps) / len(x)
-	    
-	    time_in_opened_arms = sec_in_arm2 + sec_in_arm4
-	    time_in_opened_arms_percentage = (time_in_opened_arms * fps)/ len(x) 
-	    
-	    
-	    time_in_closed_arms = sec_in_arm1 + sec_in_arm3
-	    time_in_closed_arms_percentage = (time_in_closed_arms * fps) / len(x)
-	    
-	    #open/close time ratio
-	    opened_to_closed_ratio = time_in_opened_arms/time_in_closed_arms 
-	    
-	    ############################################################################################
-	    #write to a csv file
-	    import csv
-	    
-	    csvRow = [filename_without_ext, fps, total_distance, velocity, time_in_center, time_in_center_percentage, 
-	             time_in_opened_arms, time_in_opened_arms_percentage,
-	             time_in_closed_arms, time_in_closed_arms_percentage, opened_to_closed_ratio]
+		plt.plot(x[outside][x < mean[0] ][y < mean[1]],
+		     y[outside][x < mean[0]][y < mean[1]],'m.')
 
 
-	    csvfile = filename_without_ext + 'metrics.csv'
-	    
-	    with open(csvfile, "a") as fp:
-	        wr = csv.writer(fp, dialect='excel')
-	        wr.writerow(['filename_without_ext', 'fps', 'total_distance', 'velocity', 'time_in_center', 'time_in_center_percentage', 
-	             'time_in_opened_arms', 'time_in_opened_arms_percentage',
-	             'time_in_closed_arms', 'time_in_closed_arms_percentage', 'opened_to_closed_ratio'])
+		plt.plot(x[outside][x > mean[0]][y < mean[1]],
+		     y[outside][x > mean[0]][y < mean[1]],'y.')
 
-	        wr.writerow(csvRow)
 
-	    csv_output = os.path.abspath(glob.glob('*.csv')[0])
+		plt.plot(x[outside][x > mean[0]][y > mean[1]],
+		     y[outside][x > mean[0]][y > mean[1]],'g.', )
 
-	    ############################################################################################
-	    print ('Total time spent in the center: %0.4f seconds'%time_in_center)
-	    print ('Percent of time spent in the center: %0.4f'%time_in_center_percentage)
-	    
-	    
-	    print ('Total time spent in the opened arms: %0.4f seconds'%time_in_opened_arms)
-	    print ('Percent of time spent in the opened arms: %0.4f '%time_in_opened_arms_percentage)
-	    
-	    print ('Total time spent in the opened arms: %0.4f seconds'%time_in_closed_arms)
-	    print ('Percent of time spent in the closed arms: %0.4f '%time_in_closed_arms_percentage)
-	    
-	    print ('opened arms to closed arms ratio is: %0.4f' %opened_to_closed_ratio)
 
-	    return divisions, csv_output
+		#plot the square, last step to make it over the dots in order to be obvious
+		plt.plot(shape1.get_verts()[:,0],shape1.get_verts()[:,1], 'k--')
+		plt.plot(shape1.get_verts()[:,0],shape1.get_verts()[:,1], 'ko')
+
+		#draw the mean last for the exact same reason
+		plt.plot(mean[0],mean[1], 'ko')
+
+		#now plot your frame you extracted earlier, this will invert y axis aka put in the correct order
+		plt.imshow(image) #you do not need to invert y axis here, plotting an image forces it
+
+		plt.axis('off')
+		plt.savefig('%s_Divisions.png' % (filename_without_ext))
+		divisions = os.path.abspath(glob.glob('*_Divisions.png')[0])
+
+		######################################################################################################
+
+		#use the number of frames to get the time spent in each arm
+		sec_in_center = len(x[inside]) / fps
+
+		sec_in_arm1 = len(x[outside][x < mean[0]][y > mean[1]]) / fps #red arm
+		sec_in_arm2 = len(x[outside][x < mean[0]][y < mean[1]]) / fps #magenta  
+		sec_in_arm3 = len(x[outside][x > mean[0]][y < mean[1]]) / fps #yellow
+		sec_in_arm4 = len(x[outside][x > mean[0]][y > mean[1]]) / fps #green
+
+		time_in_center = sec_in_center
+		time_in_center_percentage = (time_in_center * fps) / len(x)
+
+		time_in_opened_arms = sec_in_arm2 + sec_in_arm4
+		time_in_opened_arms_percentage = (time_in_opened_arms * fps)/ len(x) 
+
+
+		time_in_closed_arms = sec_in_arm1 + sec_in_arm3
+		time_in_closed_arms_percentage = (time_in_closed_arms * fps) / len(x)
+
+		#open/close time ratio
+		opened_to_closed_ratio = time_in_opened_arms/time_in_closed_arms 
+
+		############################################################################################
+		#write to a csv file
+		import csv
+
+		csvRow = [filename_without_ext, fps, total_distance, velocity, time_in_center, time_in_center_percentage, 
+		         time_in_opened_arms, time_in_opened_arms_percentage,
+		         time_in_closed_arms, time_in_closed_arms_percentage, opened_to_closed_ratio]
+
+
+		csvfile = filename_without_ext + 'metrics.csv'
+
+		with open(csvfile, "a") as fp:
+		    wr = csv.writer(fp, dialect='excel')
+		    wr.writerow(['filename_without_ext', 'fps', 'total_distance', 'velocity', 'time_in_center', 'time_in_center_percentage', 
+		         'time_in_opened_arms', 'time_in_opened_arms_percentage',
+		         'time_in_closed_arms', 'time_in_closed_arms_percentage', 'opened_to_closed_ratio'])
+
+		    wr.writerow(csvRow)
+
+		csv_output = os.path.abspath(glob.glob('*.csv')[0])
+
+		############################################################################################
+		print ('Total time spent in the center: %0.4f seconds'%time_in_center)
+		print ('Percent of time spent in the center: %0.4f'%time_in_center_percentage)
+
+
+		print ('Total time spent in the opened arms: %0.4f seconds'%time_in_opened_arms)
+		print ('Percent of time spent in the opened arms: %0.4f '%time_in_opened_arms_percentage)
+
+		print ('Total time spent in the opened arms: %0.4f seconds'%time_in_closed_arms)
+		print ('Percent of time spent in the closed arms: %0.4f '%time_in_closed_arms_percentage)
+
+		print ('opened arms to closed arms ratio is: %0.4f' %opened_to_closed_ratio)
+
+		return divisions, csv_output
 
 get_metrics = Node(name = 'Get_Metrics',
                   interface = Function(input_names = ['h5_file','video'],
