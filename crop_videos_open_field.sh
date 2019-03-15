@@ -1,4 +1,20 @@
 #!/bin/sh
+
+#================================================================================================
+#cut the resolution to make processing faster
+#Remove space if any from videos' name
+for vid in *.avi;do
+        name_no_spaces=`echo $vid | tr ' ' _`;
+        mv "$vid"  "$name_no_spaces";
+
+
+done
+
+for vid in *0*.avi;do
+        name_no_ext=`basename $vid .avi`;
+        ffmpeg -i $vid -r 30 -s 320x240 ${name_no_ext}_compressed.avi;
+done
+#===============================================================================================
 #cropping the videos of open field of Oct_2017
 #each video contains 4 animals and I want 1 vid/animal to be able to use DeepLabCut
 cd /media/amr/Amr_4TB/open_field
