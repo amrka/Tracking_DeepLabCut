@@ -5,6 +5,8 @@
 
 
 import deeplabcut
+import glob
+import os
 
 
 # In[3]:
@@ -29,6 +31,9 @@ ls
 
 
 deeplabcut.create_new_project('Mouse', 'Amr', ['/home/amr/Trial_DeepLabCut/mouse.avi'])
+
+# in case of multiple videos
+videolist = glob.glob(os.path.abspath("*.mov"))
 
 
 # # <font color=red>Now, You open the config.yaml file to modify the body part you want to track and if you want, you can modify the number of frames to pick</font>
